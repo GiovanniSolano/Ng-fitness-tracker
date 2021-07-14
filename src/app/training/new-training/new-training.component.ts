@@ -1,10 +1,13 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/firestore';
+import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { Observable, Subscription } from 'rxjs';
+import {  Observable } from 'rxjs';
 import { Exercise } from '../exercise.model';
 import { TrainingService } from '../training.service';
-import { map } from "rxjs/operators";
+
+import { Store } from "@ngrx/store";
+import * as fromTraining from "../training.reducer";
+import * as fromRoot from '../../app.reducer';
+
 
 @Component({
   selector: 'app-new-training',
@@ -13,21 +16,21 @@ import { map } from "rxjs/operators";
 })
 export class NewTrainingComponent implements OnInit {
 
-  @Output() trainingStart = new EventEmitter<void>();
-  exercises: Exercise[] = [];
-  exerciseSuscription: Subscription | undefined;
-  isLoading = true;
+  exercises$: Observable<Exercise[]>;
+  isLoading$: Observable<boolean> | undefined;
 
-  constructor(private trainingService: TrainingService) { }
+  constructor(private trainingService: TrainingService,
+              private store: Store<fromTraining.State>) { }
 
   ngOnInit(): void {
 
-    this.exerciseSuscription = this.trainingService.exercisesChanged.subscribe(
-      exercisesBD => {
-        this.exercises = exercisesBD;
-        this.isLoading = false;
-      }
-    );
+    this.isLoading$ = this.store.select(fromRoot.getIsLoading);
+    this.exercises$ = this.store.select(fromTraining.getAvailableExercises);
+    // this.exerciseSuscription = this.trainingService.exercisesChanged.subscribe(
+    //   exercisesBD => {
+    //     this.exercises = exercisesBD;
+    //   }
+    // );
 
     this.fetchExercises();
 
@@ -45,18 +48,6 @@ export class NewTrainingComponent implements OnInit {
 
 
 
-
-  }
-
-  ngOnDestroy(): void {
-    //Called once, before the instance is destroyed.
-    //Add 'implements OnDestroy' to the class.
-
-    if(this.exerciseSuscription) {
-
-      this.exerciseSuscription?.unsubscribe();
-    }
-    
 
   }
 

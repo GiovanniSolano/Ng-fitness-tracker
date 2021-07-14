@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, NgForm, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { UiService } from 'src/app/shared/ui.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { AuthService } from '../auth.service';
+import { Store } from "@ngrx/store";
+import * as fromRoot from '../../app.reducer';
 
 
 @Component({
@@ -13,12 +14,11 @@ import { AuthService } from '../auth.service';
 export class LoginComponent implements OnInit {
 
   form: FormGroup;
-  isLoading = false;
-  private loadingSubs!: Subscription;
+  isLoading$!: Observable<boolean>;
 
   constructor(private fb: FormBuilder,
     private authService: AuthService,
-    private uiService: UiService) { 
+    private store: Store<fromRoot.State>) { 
 
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.pattern(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$/)]],
@@ -29,11 +29,14 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.loadingSubs = this.uiService.loadingStateChanged.subscribe(isLoading => {
-      this.isLoading = isLoading;
-    });
+    this.isLoading$ = this.store.select(fromRoot.getIsLoading);
+
+    // this.loadingSubs = this.uiService.loadingStateChanged.subscribe(isLoading => {
+    //   this.isLoading = isLoading;
+    // });
 
   }
+
 
   onSubmit() {
 
@@ -44,16 +47,16 @@ export class LoginComponent implements OnInit {
     
   }
 
-  ngOnDestroy(): void {
-    //Called once, before the instance is destroyed.
-    //Add 'implements OnDestroy' to the class.
+  // ngOnDestroy(): void {
+  //   //Called once, before the instance is destroyed.
+  //   //Add 'implements OnDestroy' to the class.
 
-    if(this.loadingSubs) {
+  //   if(this.loadingSubs) {
 
-      this.loadingSubs.unsubscribe();
-    }
+  //     this.loadingSubs.unsubscribe();
+  //   }
 
-  }
+  // }
 
   get emailRequired(): boolean | undefined {
     return this.form.get('email')?.hasError('required') && this.form.get('email')?.touched;
